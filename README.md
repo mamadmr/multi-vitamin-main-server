@@ -1,12 +1,7 @@
-# multi-vitamin-main-server
-multivitamin is a challenge for highschool students to solve problems from different fields 
+# Multi-Vitamin Main Server
 
-this project is aimed to be a platform for the challenge 
+Multi-Vitamin is a challenge for high school students to solve problems from different fields. This project aims to provide a platform for the challenge.
 
-students can request a problem then the program will print the problem (problems are in pdf format and the program edit the pdf file to add the students group name and some other information).
+Students can request a problem, and the program will print the problem in PDF format, with the students' group name and other relevant information added to the file. After solving the problem, students can submit their answers and receive a new problem.
 
-after that students can give their question back and the program let them to get a new problem.
-
-on the other hand some people check the answers and give the students their score.
-
-the server has an API to get the realtime score board of the teams.
+Meanwhile, some people check the answers and give the students their scores. The server has an API that provides real-time scoreboards for the teams.
