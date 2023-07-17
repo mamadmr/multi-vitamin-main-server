@@ -1,2 +1,4 @@
 to_send_files/
 .DS_Store
+tools/__pycache__/
+
