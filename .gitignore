@@ -2,4 +2,4 @@ to_send_files/
 .DS_Store
 tools/__pycache__/
 DataBase/__pycache__/
-
+initializer/generate_sample.py

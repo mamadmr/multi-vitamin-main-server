@@ -28,7 +28,7 @@ connector.run_sql("""CREATE TABLE Teams (
                   """)
 
 connector.run_sql("""CREATE TABLE Problems (
-                    id INT NOT NULL,
+                    id INT NOT NULL AUTO_INCREMENT,
                     PRIMARY KEY (`id`),
                     question_number VARCHAR(100) NOT NULL,
                     subject VARCHAR(100) NOT NULL,
