@@ -166,10 +166,38 @@ def get_question(user_id):
 
     return "{'message': 'Done!'}"
 
-app.route('/give_question', methods=['POST'])
+@app.route('/give_question', methods=['POST'])
 @token_required
 def give_question(user_id):
-    pass
+    info = request.form.to_dict()
+
+    # check for missing data
+    if 'team_number' not in info or 'question_number' not in info:
+        return "{'error':'missing data'}"
+    
+    # get the row in problems 
+    question = connector.run_sql("SELECT * FROM Problems WHERE team_id = " + info['team_number'] + " AND question_number = '" + info['question_number'] + "'")
+    if len(question) == 0:
+        return "{'message': 'this team doesn't have this question'}"
+    question = list(question[0])
+
+    connector.run_sql("UPDATE Problems SET `user_stage2` = '" + str(user_id) +"' WHERE team_id = " + info['team_number'] + " AND question_number = '" + info['question_number'] + "'")
+    connector.run_sql("UPDATE Problems SET `stage2_time` = '" + str(datetime.now().strftime("%H:%M")) +"' WHERE team_id = " + info['team_number'] + " AND question_number = '" + info['question_number'] + "'")
+    connector.run_sql("UPDATE Problems SET `stage` = '" + str(2) +"' WHERE team_id = " + info['team_number'] + " AND question_number = '" + info['question_number'] + "'")
+
+    cell = connector.run_sql("SELECT stage1_problems FROM Teams WHERE id = " + info['team_number'])[0][0]
+    if info['question_number'] not in cell:
+        return "{'message': 'this team doesn't have this question'}"
+    
+    cell = cell.replace(info['question_number'], "")
+    connector.run_sql("UPDATE Teams SET `stage1_problems` = '" + cell +"' WHERE (`id` = '" + info['team_number'] +"');")
+
+    cell = connector.run_sql("SELECT stage2_problems FROM Teams WHERE id = " + info['team_number'])[0][0]
+    if info['question_number'] in cell:
+        return "{'message': 'this team already got this question'}"
+    connector.run_sql("UPDATE Teams SET `stage2_problems` = '" + cell+" "+info['question_number'] +"' WHERE (`id` = '" + info['team_number'] +"');")
+
+    return "{'message': 'Done!'}"
 
 
 if __name__ == '__main__':
