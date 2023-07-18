@@ -3,6 +3,9 @@ spec = importlib.util.spec_from_file_location("connector", "DataBase/connector.p
 connector = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(connector)
 
+if input("Are you sure you want to reset all tables? (yes/no)") != "yes":
+    exit()
+
 connector.run_sql("""DROP TABLE IF EXISTS Users, Teams, Problems;""")
 
 connector.run_sql("""CREATE TABLE Users (
@@ -46,4 +49,4 @@ connector.run_sql("""CREATE TABLE Problems (
                   """)
 
 
-
+print("Done!")
