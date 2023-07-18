@@ -4,3 +4,4 @@ tools/__pycache__/
 DataBase/__pycache__/
 initializer/generate_sample.py
 questions/
+pdf_editor/__pycache__/

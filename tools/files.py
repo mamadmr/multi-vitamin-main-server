@@ -25,6 +25,7 @@ def get_question_numbers(subject, hardness):
 
 def get_price_total_score(subject, hardness):
     # read the folders in the questions folder
+    # price - total_score
     types = give_question_hardness(subject)
     for i in types:
         if i[0] == hardness:

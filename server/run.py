@@ -5,10 +5,19 @@ import jwt
 import importlib.util
 import random
 import argon2
+from functools import wraps
+
 spec = importlib.util.spec_from_file_location("security", "tools/security.py")
 suc = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(suc)
 
+spec = importlib.util.spec_from_file_location("insert", "tools/insert.py")
+insert = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(insert)
+
+spec = importlib.util.spec_from_file_location("edit", "pdf_editor/edit.py")
+edit = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(edit)
 
 spec = importlib.util.spec_from_file_location("fiels", "tools/files.py")
 files = importlib.util.module_from_spec(spec)
@@ -27,6 +36,28 @@ app = Flask(__name__)
 
 # set the secret key
 app.config['SECRET_KEY'] = 'your-secret-key'
+
+# Authentication decorator
+def token_required(f):
+    @wraps(f)
+    def decorator():
+        token = None
+        # ensure the jwt-token is passed with the headers
+        if 'x-access-token' in request.headers:
+            token = request.headers['x-access-token']
+        if not token: # throw error if no token provided
+            return "{'message': 'A valid token is missing!'}"
+        try:
+           # decode the token to obtain user public_id
+            data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=['HS256'])
+            if data['public_id'] == None:
+                raise Exception()
+            
+        except:
+            return "{'message': 'Invalid token!'}"
+         # Return the user information attached to the token
+        return f(data['public_id'])
+    return decorator
 
 # Login method responsible for generating authentication tokens
 @app.route('/login', methods=['POST'])
@@ -68,8 +99,6 @@ def login():
 
     return  "{'token': " + str(token) + "}"
 
-
-
 @app.route('/questions', methods=['GET'])
 def get_subjects():
     return "{'questions':"+ str(files.give_question_subjects()) +"}"
@@ -83,7 +112,8 @@ def get_team_name(team_id):
     return "{'name':'"+ str(list(connector.run_sql("SELECT name FROM Teams WHERE id = " + team_id))[0][0]) +"'}"
 
 @app.route('/get_question', methods=['POST'])
-def get_question():
+@token_required
+def get_question(user_id):
     # team_number subject hardness
     info = request.form.to_dict()
     
@@ -102,12 +132,39 @@ def get_question():
     # choose a random question
     question_number = random.choice(list_of_questions)
 
+    # generae the pdf file
+    price, total_score = files.get_price_total_score(info['subject'], info['hardness'])
+    location = 'questions/' + info['subject'] + '/' + info['hardness']+'-'+str(price)+'-'+str(total_score) + '/' + question_number
 
-    print(questions_that_already_get)
-    print(questions_of_subject_and_hardness)
-    print(list_of_questions)
-    print(info)
-    return "Nothing"
+    pdf_info = {"headers":{
+                    "team_number": info['team_number'],
+                    "team_name": str(list(connector.run_sql("SELECT name FROM Teams WHERE id = " + info['team_number']))[0][0]),
+                    "date": datetime.now().strftime("%H:%M"),
+                    "price": str(price),
+                    "question_number": str(question_number[:-4]),
+                    "subject": info['subject'],
+                    "hardness": info['hardness'],
+                    "score": str(total_score)
+                    },
+                    "questions": [[str(i[0]), str(i[1]*i[2]//100)] for i in connector.run_sql("SELECT question_number, score, total_score FROM Problems WHERE team_id = " + info['team_number'])],
+                    "subjects": [],
+                }
+    edit.edit(location, pdf_info)
+
+    # add the question to the teams table
+    cell = connector.run_sql("SELECT stage1_problems FROM Teams WHERE id = " + info['team_number'])[0][0]
+    connector.run_sql("UPDATE Teams SET `stage1_problems` = '" + cell+" "+question_number[:-4] +"' WHERE (`id` = '" + info['team_number'] +"');")
+
+    # add the question to the problems table
+    insert.insert_problem(question_number[:-4], info['subject'], info['hardness'], info['team_number'], str(user_id), datetime.now().strftime("%H:%M"), price, total_score)
+
+    return "{'message': 'Done!'}"
+
+app.route('/give_question', methods=['POST'])
+@token_required
+def give_question(user_id):
+    pass
+
 
 if __name__ == '__main__':
     app.run(debug=debug, port=12345)
