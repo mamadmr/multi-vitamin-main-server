@@ -27,6 +27,9 @@ spec = importlib.util.spec_from_file_location("connector", "DataBase/connector.p
 connector = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(connector)
 
+spec = importlib.util.spec_from_file_location("config", "tools/config.py")
+config = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(config)
 
 # debuge mode
 debug = True
@@ -153,6 +156,9 @@ def get_question(user_id):
 
     # add the question to the teams table
     cell = connector.run_sql("SELECT stage1_problems FROM Teams WHERE id = " + info['team_number'])[0][0]
+    if (len(cell.split()) >= int(config.read_config()['total_question'])):
+        return "{'message': 'already got many the questions'}"
+    
     connector.run_sql("UPDATE Teams SET `stage1_problems` = '" + cell+" "+question_number[:-4] +"' WHERE (`id` = '" + info['team_number'] +"');")
 
     # add the question to the problems table

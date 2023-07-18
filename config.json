@@ -3,5 +3,6 @@
     "Database_Password":"@HelloWorld2002#",
     "Database_host":"localhost",
     "Database_name": "multivitamin",
-    "Database_port": "3306"
+    "Database_port": "3306",
+    "total_question": "3"
 }
