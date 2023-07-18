@@ -22,8 +22,8 @@ def insert_team(name, id):
                     ("{name}", {id} , 0, "", "", "");                 
                   """)
   
-def insert_problem(question_number, subject, hardness, team_id, user_stage1, stage1_time):
+def insert_problem(question_number, subject, hardness, team_id, user_stage1, stage1_time, price, total_score):
     connector.run_sql(f"""
-                    INSERT INTO Problems (question_number, subject, hardness, team_id, stage, score, user_stage1, stage1_time) VALUES  
-                    ("{question_number}", "{subject}", "{hardness}", {team_id}, 1, 0, {user_stage1}, "{stage1_time}");                 
+                    INSERT INTO Problems (question_number, subject, hardness, team_id, stage, score, user_stage1, stage1_time, price, total_score) VALUES  
+                    ("{question_number}", "{subject}", "{hardness}", {team_id}, 1, 0, {user_stage1}, "{stage1_time}", {price}, {total_score});         
                   """)

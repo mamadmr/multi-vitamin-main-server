@@ -36,6 +36,8 @@ connector.run_sql("""CREATE TABLE Problems (
                     team_id INT NOT NULL,
                     stage INT NOT NULL,
                     score INT,
+                    price INT NOT NULL,
+                    total_score INT NOT NULL,
                     stage1_time VARCHAR(100),
                     stage2_time VARCHAR(100),
                     stage3_time VARCHAR(100),
