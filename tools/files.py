@@ -17,6 +17,15 @@ def give_question_hardness(subject):
             folders.append(i.split('-'))
     return folders
 
+def get_price_total_score(subject, hardness):
+    # read the folders in the questions folder
+    types = give_question_hardness(subject)
+    for i in types:
+        if i[0] == hardness:
+            return i[1], i[2]
+
+
 if __name__ == '__main__':
     print(give_question_subjects())
     print(give_question_hardness("math"))
+    print(get_price_total_score("math", "hard"))
