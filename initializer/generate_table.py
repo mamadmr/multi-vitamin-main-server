@@ -12,7 +12,7 @@ connector.run_sql("""CREATE TABLE Users (
                   id INT NOT NULL AUTO_INCREMENT,
                   PRIMARY KEY (`id`),
                   name VARCHAR(255) NOT NULL,
-                  username_hash VARCHAR(500) NOT NULL, 
+                  username VARCHAR(500) NOT NULL, 
                   password_hash VARCHAR(500) NOT NULL, 
                   privillage VARCHAR(255) NOT NULL)
                   """)

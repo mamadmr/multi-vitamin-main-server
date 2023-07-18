@@ -8,11 +8,10 @@ suc = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(suc)
 
 def insert_user(name, username, password, privillage):
-    username = suc.hash(username)
     password = suc.hash(password)
 
     connector.run_sql(f"""
-                    INSERT INTO Users (name, username_hash, password_hash, privillage) VALUES  
+                    INSERT INTO Users (name, username, password_hash, privillage) VALUES  
                     ("{name}", "{username}" , "{password}", "{privillage}");                 
                   """)
 
