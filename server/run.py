@@ -160,6 +160,9 @@ def get_question(user_id):
         return "{'message': 'already got many the questions'}"
     
     connector.run_sql("UPDATE Teams SET `stage1_problems` = '" + cell+" "+question_number[:-4] +"' WHERE (`id` = '" + info['team_number'] +"');")
+    
+    # take the price from score of the team
+    connector.run_sql("UPDATE Teams SET score = score - " + str(price) +" WHERE (`id` = '" + info['team_number'] +"');")
 
     # add the question to the problems table
     insert.insert_problem(question_number[:-4], info['subject'], info['hardness'], info['team_number'], str(user_id), datetime.now().strftime("%H:%M"), price, total_score)
@@ -176,29 +179,72 @@ def give_question(user_id):
         return "{'error':'missing data'}"
     
     # get the row in problems 
-    question = connector.run_sql("SELECT * FROM Problems WHERE team_id = " + info['team_number'] + " AND question_number = '" + info['question_number'] + "'")
+    question = connector.run_sql("SELECT stage FROM Problems WHERE team_id = " + info['team_number'] + " AND question_number = '" + info['question_number'] + "'")
     if len(question) == 0:
         return "{'message': 'this team doesn't have this question'}"
-    question = list(question[0])
-
-    connector.run_sql("UPDATE Problems SET `user_stage2` = '" + str(user_id) +"' WHERE team_id = " + info['team_number'] + " AND question_number = '" + info['question_number'] + "'")
-    connector.run_sql("UPDATE Problems SET `stage2_time` = '" + str(datetime.now().strftime("%H:%M")) +"' WHERE team_id = " + info['team_number'] + " AND question_number = '" + info['question_number'] + "'")
-    connector.run_sql("UPDATE Problems SET `stage` = '" + str(2) +"' WHERE team_id = " + info['team_number'] + " AND question_number = '" + info['question_number'] + "'")
-
+    if question[0][0] != 1:
+        return "{'message': 'this question is not in stage 1'}"
+   
     cell = connector.run_sql("SELECT stage1_problems FROM Teams WHERE id = " + info['team_number'])[0][0]
     if info['question_number'] not in cell:
         return "{'message': 'this team doesn't have this question'}"
-    
     cell = cell.replace(info['question_number'], "")
     connector.run_sql("UPDATE Teams SET `stage1_problems` = '" + cell +"' WHERE (`id` = '" + info['team_number'] +"');")
+    
+    connector.run_sql("UPDATE Problems SET `user_stage2` = '" + str(user_id) +"' WHERE team_id = " + info['team_number'] + " AND question_number = '" + info['question_number'] + "'")
+    connector.run_sql("UPDATE Problems SET `stage2_time` = '" + str(datetime.now().strftime("%H:%M")) +"' WHERE team_id = " + info['team_number'] + " AND question_number = '" + info['question_number'] + "'")
+    connector.run_sql("UPDATE Problems SET `stage` = '" + str(2) +"' WHERE team_id = " + info['team_number'] + " AND question_number = '" + info['question_number'] + "'")
 
     cell = connector.run_sql("SELECT stage2_problems FROM Teams WHERE id = " + info['team_number'])[0][0]
     if info['question_number'] in cell:
         return "{'message': 'this team already got this question'}"
     connector.run_sql("UPDATE Teams SET `stage2_problems` = '" + cell+" "+info['question_number'] +"' WHERE (`id` = '" + info['team_number'] +"');")
 
+
     return "{'message': 'Done!'}"
 
+@app.route('/give_score', methods=['POST'])
+@token_required
+def give_score(user_id):
+    info = request.form.to_dict()
+
+    if 'team_number' not in info or 'question_number' not in info or 'score' not in info:
+        return "{'error':'missing data'}"
+
+    # get the row in problems 
+    question = connector.run_sql("SELECT stage FROM Problems WHERE team_id = " + info['team_number'] + " AND question_number = '" + info['question_number'] + "'")
+    if len(question) == 0:
+        return "{'message': 'this team doesn't have this question'}"
+    if question[0][0] != 2:
+        return "{'message': 'this question is not in stage 1'}"
+    
+    connector.run_sql("UPDATE Problems SET `stage` = '" + str(3) +"' WHERE team_id = " + info['team_number'] + " AND question_number = '" + info['question_number'] + "'")
+    connector.run_sql("UPDATE Problems SET `user_stage3` = '" + str(user_id) +"' WHERE team_id = " + info['team_number'] + " AND question_number = '" + info['question_number'] + "'")
+    connector.run_sql("UPDATE Problems SET `stage3_time` = '" + str(datetime.now().strftime("%H:%M")) +"' WHERE team_id = " + info['team_number'] + " AND question_number = '" + info['question_number'] + "'")
+    
+    cell = connector.run_sql("SELECT stage2_problems FROM Teams WHERE id = " + info['team_number'])[0][0]
+    if info['question_number'] not in cell:
+        return "{'message': 'this team doesn't have this question'}"
+    cell = cell.replace(info['question_number'], "")
+    connector.run_sql("UPDATE Teams SET `stage2_problems` = '" + cell +"' WHERE (`id` = '" + info['team_number'] +"');")
+
+    cell = connector.run_sql("SELECT stage3_problems FROM Teams WHERE id = " + info['team_number'])[0][0]
+    if info['question_number'] in cell:
+        return "{'message': 'this team already got this question'}"
+    connector.run_sql("UPDATE Teams SET `stage3_problems` = '" + cell+" "+info['question_number'] +"' WHERE (`id` = '" + info['team_number'] +"');")
+
+    # add the score to the score of the team
+    total_score = int(connector.run_sql("SELECT total_score FROM Problems WHERE team_id = " + info['team_number'] + " AND question_number = '" + info['question_number'] + "'")[0][0])
+    score = int(info['score']) * total_score // 100
+    connector.run_sql("UPDATE Teams SET score = score + " + str(score) +" WHERE (`id` = '" + info['team_number'] +"');")
+    connector.run_sql("UPDATE Problems SET score = " + str(info['score']) +" WHERE team_id = " + info['team_number'] + " AND question_number = '" + info['question_number'] + "'")
+    return "{'message': 'Done!'}"
+
+
+@app.route('/score_board', methods=['GET'])
+def score_board():
+    score_board = [list(i) for i in connector.run_sql("SELECT name, score FROM Teams ORDER BY score DESC")]
+    return "{ 'score_board': " + str(score_board) + " }"
 
 if __name__ == '__main__':
     app.run(debug=debug, port=12345)
