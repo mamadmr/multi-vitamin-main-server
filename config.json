@@ -4,5 +4,13 @@
     "Database_host":"localhost",
     "Database_name": "multivitamin",
     "Database_port": "3306",
-    "total_question": "3"
+    "total_question": "3",
+    "printer_server1_host": "127.0.0.1",
+    "printer_server1_port": "12345",
+    "printer_server1_username": "Golabies",
+    "printer_server1_password": "HelloWorld2002",
+    "printer_server2_host": "127.0.0.1",
+    "printer_server2_port": "12356",
+    "printer_server2_username": "Golabies",
+    "printer_server2_password": "HelloWorld2002"
 }
