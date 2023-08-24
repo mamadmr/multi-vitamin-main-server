@@ -75,8 +75,6 @@ def first_page(page, info):
         data = info['subjects'][i][2]
         add((195 , 638 + i * 18.8), data, page)
         
-        data = info['subjects'][i][3]
-        add((120 , 638 + i * 18.8), data, page)
 
 def second_page(page, info):
     data = info['headers']['team_number']
@@ -137,15 +135,15 @@ if __name__ == '__main__':
                 ['A236', '40'],
                 ],
             "subjects": [
+                ['math', '500', '2'],
+                ['science', '300', '1'],
+                ['english', '200', '1'],
                 ['math', '500', '2', '5'],
-                ['science', '300', '1', '3'],
-                ['english', '200', '1', '2'],
-                ['math', '500', '2', '5'],
-                ['science', '300', '1', '3'],
-                ['english', '200', '1', '2'],
-                ['math', '500', '2', '5'],
-                ['science', '300', '1', '3'],
-                ['english', '200', '1', '2'],
+                ['science', '300', '1'],
+                ['english', '200', '1'],
+                ['math', '500', '2',],
+                ['science', '300', '1'],
+                ['english', '200', '1'],
                 ]
             }
     edit(location, info)

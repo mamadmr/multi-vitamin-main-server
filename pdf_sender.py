@@ -2,6 +2,7 @@ import requests
 import importlib.util
 import os
 import shutil
+import random
 
 spec = importlib.util.spec_from_file_location("config", "tools/config.py")
 config = importlib.util.module_from_spec(spec)
@@ -11,9 +12,10 @@ spec.loader.exec_module(config)
 def get_token(username, password, host, port):
     # login to the server and get the token
     address = f"http://{host}:{port}/login"
-
+    print(address)
     # put the username and password in the body of the request
     body = {"username": username, "password": password}
+    print(body)
     # send the request
     try:
         response = requests.post(address, data=body).text
@@ -33,6 +35,7 @@ hosts = []
 usernames = []
 passwords = []
 tokens = []
+
 
 config1 = config.read_config()
 username1 = config1["printer_server1_username"]
@@ -57,12 +60,12 @@ passwords.append(password2)
 ports.append(port2)
 hosts.append(host2)
 
-
+print("here")
 token1 = get_token(username1, password1, host1, port1)
 token2 = get_token(username2, password2, host2, port2)
 tokens.append(token1)
 tokens.append(token2)
-
+print("here")
 
 while True:
     # read the pdf files in the to_send_files folder
@@ -86,6 +89,7 @@ while True:
             selected_printer = i
             selected_printer_files = response['number_of_files']
 
+    selected_printer = random.randint(0, 1)
     host = hosts[selected_printer]
     port = ports[selected_printer]
     token = tokens[selected_printer]

@@ -15,10 +15,10 @@ def insert_user(name, username, password, privillage):
                     ("{name}", "{username}" , "{password}", "{privillage}");                 
                   """)
 
-def insert_team(name, id):
+def insert_team(id, name, score):
     connector.run_sql(f"""
                     INSERT INTO Teams (name, id, score, stage1_problems, stage2_problems, stage3_problems) VALUES  
-                    ("{name}", {id} , 0, "", "", "");                 
+                    ("{name}", {id} , {score}, "", "", "");                 
                   """)
   
 def insert_problem(question_number, subject, hardness, team_id, user_stage1, stage1_time, price, total_score):

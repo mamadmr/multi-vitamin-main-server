@@ -21,7 +21,7 @@ def get_question_numbers(subject, hardness):
     temp =  os.listdir('questions/' + subject)
     for i in temp:
         if i.startswith(hardness):
-            return os.listdir('questions/' + subject + '/' + i)
+            return [i for i in os.listdir('questions/' + subject + '/' + i) if i.endswith('.pdf')]
 
 def get_price_total_score(subject, hardness):
     # read the folders in the questions folder
@@ -33,7 +33,8 @@ def get_price_total_score(subject, hardness):
 
 
 if __name__ == '__main__':
-    print(give_question_subjects())
-    print(give_question_hardness("math"))
-    print(get_price_total_score("math", "hard"))
-    print(get_question_numbers("math", "simple"))
+    #print(give_question_subjects())
+    #print(give_question_hardness("فیزیک"))
+    print(get_question_numbers("زیست", "سخت"))
+
+    #print(get_question_numbers("math", "simple"))

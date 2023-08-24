@@ -1,4 +1,3 @@
-import os
 from flask import Flask, request
 from datetime import datetime
 import jwt
@@ -100,7 +99,7 @@ def login():
     # generate the token
     token = jwt.encode({'public_id':  public_id}, app.config['SECRET_KEY'], 'HS256')
 
-    return  "{'token': " + str(token) + "}"
+    return  "{'token': '" + str(token) + "'}"
 
 @app.route('/questions', methods=['GET'])
 def get_subjects():
@@ -139,6 +138,21 @@ def get_question(user_id):
     price, total_score = files.get_price_total_score(info['subject'], info['hardness'])
     location = 'questions/' + info['subject'] + '/' + info['hardness']+'-'+str(price)+'-'+str(total_score) + '/' + question_number
 
+    # generate subject list
+    temp = dict()
+    for i in connector.run_sql("SELECT subject, hardness, score, total_score FROM Problems WHERE team_id = " + info['team_number']):
+        if i[0] not in temp:
+            temp[i[0]] = [i[0], 0, 0]
+        
+        temp[i[0]][1] += int(i[2])*int(i[3])//100
+        temp[i[0]][2] += 1
+
+
+    subjects_info = list(temp.values())
+    for i in subjects_info:
+        i[1] = str(i[1])
+        i[2] = str(i[2])
+
     pdf_info = {"headers":{
                     "team_number": info['team_number'],
                     "team_name": str(list(connector.run_sql("SELECT name FROM Teams WHERE id = " + info['team_number']))[0][0]),
@@ -150,9 +164,8 @@ def get_question(user_id):
                     "score": str(total_score)
                     },
                     "questions": [[str(i[0]), str(i[1]*i[2]//100)] for i in connector.run_sql("SELECT question_number, score, total_score FROM Problems WHERE team_id = " + info['team_number'])],
-                    "subjects": [],
+                    "subjects": subjects_info,
                 }
-    edit.edit(location, pdf_info)
 
     # add the question to the teams table
     cell = connector.run_sql("SELECT stage1_problems FROM Teams WHERE id = " + info['team_number'])[0][0]
@@ -166,6 +179,7 @@ def get_question(user_id):
 
     # add the question to the problems table
     insert.insert_problem(question_number[:-4], info['subject'], info['hardness'], info['team_number'], str(user_id), datetime.now().strftime("%H:%M"), price, total_score)
+    edit.edit(location, pdf_info)
 
     return "{'message': 'Done!'}"
 
@@ -181,13 +195,13 @@ def give_question(user_id):
     # get the row in problems 
     question = connector.run_sql("SELECT stage FROM Problems WHERE team_id = " + info['team_number'] + " AND question_number = '" + info['question_number'] + "'")
     if len(question) == 0:
-        return "{'message': 'this team doesn't have this question'}"
+        return "{'message': 'this team doesnt have this question'}"
     if question[0][0] != 1:
         return "{'message': 'this question is not in stage 1'}"
    
     cell = connector.run_sql("SELECT stage1_problems FROM Teams WHERE id = " + info['team_number'])[0][0]
     if info['question_number'] not in cell:
-        return "{'message': 'this team doesn't have this question'}"
+        return "{'message': 'this team doesnt have this question'}"
     cell = cell.replace(info['question_number'], "")
     connector.run_sql("UPDATE Teams SET `stage1_problems` = '" + cell +"' WHERE (`id` = '" + info['team_number'] +"');")
     
@@ -214,9 +228,9 @@ def give_score(user_id):
     # get the row in problems 
     question = connector.run_sql("SELECT stage FROM Problems WHERE team_id = " + info['team_number'] + " AND question_number = '" + info['question_number'] + "'")
     if len(question) == 0:
-        return "{'message': 'this team doesn't have this question'}"
+        return "{'message': 'this team doesnt have this question'}"
     if question[0][0] != 2:
-        return "{'message': 'this question is not in stage 1'}"
+        return "{'message': 'this question is not in stage 2 its in stage"+ str(question[0][0]) +"'}"
     
     connector.run_sql("UPDATE Problems SET `stage` = '" + str(3) +"' WHERE team_id = " + info['team_number'] + " AND question_number = '" + info['question_number'] + "'")
     connector.run_sql("UPDATE Problems SET `user_stage3` = '" + str(user_id) +"' WHERE team_id = " + info['team_number'] + " AND question_number = '" + info['question_number'] + "'")
@@ -224,7 +238,7 @@ def give_score(user_id):
     
     cell = connector.run_sql("SELECT stage2_problems FROM Teams WHERE id = " + info['team_number'])[0][0]
     if info['question_number'] not in cell:
-        return "{'message': 'this team doesn't have this question'}"
+        return "{'message': 'this team doesnt have this question'}"
     cell = cell.replace(info['question_number'], "")
     connector.run_sql("UPDATE Teams SET `stage2_problems` = '" + cell +"' WHERE (`id` = '" + info['team_number'] +"');")
 
@@ -246,6 +260,9 @@ def score_board():
     score_board = [list(i) for i in connector.run_sql("SELECT name, score FROM Teams ORDER BY score DESC")]
     return "{ 'score_board': " + str(score_board) + " }"
 
+
+
 if __name__ == '__main__':
-    app.run(debug=debug, port=12345)
+    # find the ip4 of the device
+    app.run(debug=debug, port=12345, host="192.168.1.162")
 
